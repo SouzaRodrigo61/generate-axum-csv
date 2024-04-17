@@ -1,12 +1,11 @@
 extern crate csv;
+use std::fs;
+use std::net::SocketAddr;
 use std::{fs::File, io::Read};
-
-use std::{net::SocketAddr};
 
 use axum::http::header;
 use axum::response::IntoResponse;
 use axum::{
-    http::{Response, StatusCode},
     routing::get,
     Router,
 };
@@ -40,6 +39,8 @@ fn write_csv() -> Result<Vec<u8>, String> {
         .map_err(|e| e.to_string())
         .expect("");
 
+    fs::remove_file("users.csv").expect("msg");
+
     Ok(data)
 }
 
@@ -71,21 +72,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = Router::new().route("/", get(excel_handler));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port.parse::<u16>().unwrap()));
+    // let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     let listener = TcpListener::bind(addr).await?;
-
-    axum::serve(listener, app).await.unwrap();
 
     println!("Running generate csv");
 
+    axum::serve(listener, app).await.unwrap();
+
     Ok(())
 }
-
-// fn main() {
-
-//     let operation = write_csv();
-
-//     match operation {
-//         Ok(buffer) => println!("CSV written successfully. {:?}", buffer),
-//         Err(e) => println!("Error: {}", e),
-//     }
-// }
